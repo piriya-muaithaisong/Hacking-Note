@@ -30,3 +30,36 @@ Get domain SID
 ```powershell
 Get-DomainSID(Get-ADDomain).DomainSID #ActiveDirectory Module
 ```
+
+## User
+
+ list of users in the current domain
+```powershell
+# PowerView
+Get-NetUser
+Get-NetUser –Username student1
+
+# ActiveDirectory Module
+Get-ADUser -Filter * -Properties *
+Get-ADUser -Identity student1 -Properties *
+```
+list of all properties for users in the current domain
+```powershell
+# PowerView
+Get-UserProperty
+Get-UserProperty –Properties pwdlastset
+
+# ActiveDirectory Module
+Get-ADUser -Filter * -Properties * | select -First 1 | Get-Member -MemberType *Property | select Name
+
+Get-ADUser -Filter * -Properties * | selectname,@{expression ={[datetime]::fromFileTime($_.pwdlastset)}}
+```
+
+Search for a particular string in a user's attributes
+```powershell
+# PowerView
+Find-UserField -SearchField Description -SearchTerm "built"
+
+# ActiveDirectory Module
+Get-ADUser -Filter 'Description -like "*built*"' -Properties Description | select name,Description
+```
