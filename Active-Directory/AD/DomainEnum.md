@@ -63,3 +63,25 @@ Find-UserField -SearchField Description -SearchTerm "built"
 # ActiveDirectory Module
 Get-ADUser -Filter 'Description -like "*built*"' -Properties Description | select name,Description
 ```
+
+## Computer
+
+Get a list of computers in the current domain
+```powershell
+# PowerView
+Get-NetComputer
+Get-NetComputer –OperatingSystem "*Server 2016*"
+Get-NetComputer -Ping
+Get-NetComputer -FullData
+
+# ActiveDirectory Module
+Get-ADComputer -Filter * | select Name
+Get-ADComputer -Filter 'OperatingSystem -like "*Server 2016*"' -Properties OperatingSystem | select Name,OperatingSystem
+Get-ADComputer -Filter * -Properties DNSHostName | %{TestConnection -Count 1 -ComputerName $_.DNSHostName}
+Get-ADComputer -Filter * -Properties *
+
+```
+I dont remember this thing
+```powershell
+Get-NetOU | %{Get-NetComputer -ADSPath $_}
+```
