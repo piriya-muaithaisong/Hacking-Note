@@ -5,6 +5,8 @@
 1. [Tools](#Tools)
 2. [Domain](#Domain)
 3. [User](#User)
+4. [Computer](#Computer)
+5. [Group](#Group)
 
 ## Tools
 1. [PowerView](https://github.com/PowerShellMafia/PowerSploit/blob/master/Recon/PowerView.ps1)
