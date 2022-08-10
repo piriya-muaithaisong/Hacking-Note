@@ -28,7 +28,8 @@ Get-ADDomain -Identity moneycorp.local #ActiveDirectory Module
 ```
 Get domain SID
 ```powershell
-Get-DomainSID(Get-ADDomain).DomainSID #ActiveDirectory Module
+Get-DomainSID #PowerView
+(Get-ADDomain).DomainSID #ActiveDirectory Module
 ```
 
 ## User
@@ -84,4 +85,47 @@ Get-ADComputer -Filter * -Properties *
 I dont remember this thing
 ```powershell
 Get-NetOU | %{Get-NetComputer -ADSPath $_}
+```
+
+## Group
+
+Get all the groups in the current domain
+```powershell
+# PowerView
+Get-NetGroup
+Get-NetGroup -Domain <target domain>
+Get-NetGroup -FullData
+
+# ActiveDirectory Module
+Get-ADGroup -Filter * | select Name 
+Get-ADGroup -Filter * -Properties *
+
+```
+
+Get all groups containing the word "admin" in group name
+```powershell
+# PowerView
+Get-NetGroup *admin*
+Get-NetGroup -GroupName *admin* -Domain moneycorp.local
+
+# ActiveDirectory Module
+Get-ADGroup -Filter 'Name -like "*admin*"' | select Name
+```
+
+Get all the members of the Domain Admins group
+```powershell
+# PowerView
+Get-NetGroupMember -GroupName "Domain Admins" -Recurse
+
+# ActiveDirectory Module
+Get-ADGroupMember -Identity "Domain Admins" -Recursive 
+```
+
+Get the group membership for a user
+```powershell
+# PowerView
+Get-NetGroup –UserName "student1"
+
+# ActiveDirectory Module
+Get-ADPrincipalGroupMembership -Identity student1
 ```
