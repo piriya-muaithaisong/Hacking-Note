@@ -7,6 +7,16 @@
 3. [User](#User)
 4. [Computer](#Computer)
 5. [Group](#Group)
+6. [Actively Logged User](#Actively Logged User)
+7. [share](#share)
+8. [Domain Policy](#Domain Policy)
+9. [Domain Controllers](#Domain Controllers)
+10. [GPO](#GPO)
+11. [OU](#OU)
+12. [ACL/ACE](#ACL/ACE)
+13. [Trust](#Trust)
+14. [Forest](#Forest)
+15. [User Hunting](#User Hunting)
 
 ## Tools
 1. [PowerView](https://github.com/PowerShellMafia/PowerSploit/blob/master/Recon/PowerView.ps1)
@@ -202,7 +212,7 @@ Get domain policy for another domain
 (Get-DomainPolicy -domain moneycorp.local)."system access"
 ```
 
-## domain Controllers
+## Domain Controllers
 
 Get domain controllers for the current domain
 ```powershell
