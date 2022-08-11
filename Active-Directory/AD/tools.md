@@ -14,11 +14,23 @@ bypass execution retriction
 powershell -ep bypass
 ```
 
+format table
+```powershell
+Get-NetUser| Format-Table
+```
+
+Select specipic data 
+```powershell
+Get-NetUser| select name
+```
+
+
 ## PowerView.ps1
 import
 ```powershell
 . .\PowerView.ps1
 ```
+
 
 ## AD Module
 import

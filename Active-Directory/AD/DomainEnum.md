@@ -13,12 +13,16 @@
 2. [ActiveDirectory Module]()
 
 ## My user join domain?
+check domain
 ```powershell
 (Get-WmiObject -Class Win32_ComputerSystem).PartOfDomain
 
 $env:USERDNSDomain
 ```
-
+check hostname
+```powershell
+ hostname
+```
 
 ## Domain
 Get current  domain using .NET class
@@ -31,6 +35,7 @@ Get current  domain using powershell
 Get-NetDomain #PowerView
 Get-ADDomain #ActiveDirectory Module
 ```
+
 Get object of another domain
 ```powershell
 Get-NetDomain -Domain moneycorp.local #PowerView
@@ -138,4 +143,14 @@ Get-NetGroup –UserName "student1"
 
 # ActiveDirectory Module
 Get-ADPrincipalGroupMembership -Identity student1
+```
+
+List all the local groups on a machine (needs administrator privs on nondc machines) -Powerview:
+```powershell
+Get-NetLocalGroup -ComputerName dcorpdc.dollarcorp.moneycorp.local -ListGroups
+```
+
+Get members of all the local groups on a machine (needs administrator privs on non-dc machines) -Powerview 
+```powershell
+Get-NetLocalGroup -ComputerName dcorpdc.dollarcorp.moneycorp.local -Recurse
 ```
