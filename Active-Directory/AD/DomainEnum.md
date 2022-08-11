@@ -9,7 +9,7 @@
 5. [Group](#Group)
 6. [Actively Logged User](#Actively Logged User)
 7. [share](#share)
-8. [Domain Policy](#Domain Policy)
+8. [Domain%20Policy](#Domain%20Policy)
 9. [Domain Controllers](#Domain Controllers)
 10. [GPO](#GPO)
 11. [OU](#OU)
