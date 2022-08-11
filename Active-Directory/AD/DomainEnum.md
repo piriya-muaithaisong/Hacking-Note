@@ -12,6 +12,14 @@
 1. [PowerView](https://github.com/PowerShellMafia/PowerSploit/blob/master/Recon/PowerView.ps1)
 2. [ActiveDirectory Module]()
 
+## My user join domain?
+```powershell
+(Get-WmiObject -Class Win32_ComputerSystem).PartOfDomain
+
+$env:USERDNSDomain
+```
+
+
 ## Domain
 Get current  domain using .NET class
 ```.NET
