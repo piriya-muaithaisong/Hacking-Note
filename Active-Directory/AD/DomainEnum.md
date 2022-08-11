@@ -191,8 +191,10 @@ Get-NetFileServer
 ## Domain Policy
 Get domain policy for the current domain
 ```powershell
-Get-DomainPolicy(Get-DomainPolicy)."system access"
-Get-DomainPolicy(Get-DomainPolicy)."Kerberos Policy"
+Get-DomainPolicy
+(Get-DomainPolicy)."system access"
+Get-DomainPolicy
+(Get-DomainPolicy)."Kerberos Policy"
 ```
 
 Get domain policy for another domain
@@ -254,12 +256,27 @@ Get GPO applied on an OU. Read GPOname from gplink attribute from Get-NetOU
 Get-NetGPO -GPOname "{AB306569-220D-43FF-B03B83E8F4EF8081}"
 Get-GPO -Guid AB306569-220D-43FF-B03B-83E8F4EF8081 (GroupPolicy module)
 ```
-Get the compute's' name corresponding to the OU
+Get the computer's name that in the OU
 ```powershell
- Get-NetOU StudentMachines| %{Get-NetComputer -ADSPath $_}
+Get-NetOU StudentMachines| %{Get-NetComputer -ADSPath $_}
 ```
 
-## ACL
+## ACL/ACE
+How to Read the out put
+```
+"IdentityReference" 
+
+has
+
+"ActiveDirectoryRights"
+
+to
+
+"ObjectDN"
+```
+tips for ACL enumuration
+> Query ACL in both user and group
+
 Get the ACLs associated with the specified object
 ```powershell
 Get-ObjectAcl -SamAccountName student1 -ResolveGUIDs
@@ -270,23 +287,90 @@ Get the ACLs associated with the specified prefix to be used for search
 ```powershell
 Get-ObjectAcl -ADSprefix 'CN=Administrator,CN=Users' -Verbose
 ```
-#We can also enumerate ACLs using ActiveDirectory module but without resolving GUIDs
+Enumerate ACLs using ActiveDirectory module but without resolving GUIDs
 ```powershell
 (Get-Acl 'AD:\CN=Administrator,CN=Users,DC=dollarcorp,DC=moneycorp,DC=local').Access
 ```
-
-
-# Get the ACLs associated with the specified LDAP path to be used for search
+Get the ACLs associated with the specified LDAP path to be used for search
 ```powershell
 Get-ObjectAcl -ADSpath "LDAP://CN=Domain Admins,CN=Users,DC=dollarcorp,DC=moneycorp,DC=local" -ResolveGUIDs -Verbose
 ```
 
-#Search for interesting ACEs
+Search for interesting ACEs
 ```powershell
 Invoke-ACLScanner -ResolveGUIDs
+Invoke-ACLScanner -ResolveGUIDs | ?{$_.IdentityReference -match "student"}
+Invoke-ACLScanner -ResolveGUIDs | ?{$_.IdentityReference -match "RDPUsers"}
+Invoke-ACLScanner -ResolveGUIDs | ?{$_.IdentityReference -match "RDPUsers" -and $_.ObjectDN -match "134"}
 ```
 
-#Get the ACLs associated with the specified path
+Get the ACLs associated with the specified path
 ```powershell
 Get-PathAcl -Path "\\dcorp-dc.dollarcorp.moneycorp.local\sysvol"
+```
+
+
+## Trust
+Get a list of all domain trusts for the current domain
+```powershell
+Get-NetDomainTrust
+Get-NetDomainTrust –Domain us.dollarcorp.moneycorp.local
+
+Get-ADTrust
+Get-ADTrust –Identity us.dollarcorp.moneycorp.local
+```
+
+# Forest
+Get details about the current forest
+```powershell
+Get-NetForest
+Get-NetForest -Forest eurocorp.local
+
+Get-ADForest
+Get-ADForest -Identity eurocorp.local
+```
+Get all domains in the current forest
+```powershell
+Get-NetForestDomain
+Get-NetForestDomain -Forest eurocorp.local
+
+(Get-ADForest).Domains
+```
+
+Get all global catalogs for the current forest
+```powershell
+Get-NetForestCatalog
+Get-NetForestCatalog -Forest eurocorp.local
+
+Get-ADForest | select -ExpandProperty GlobalCatalogs
+```
+Map trusts of a forest
+```powershell
+Get-NetForestTrust
+Get-NetForestTrust -Forest eurocorp.local
+
+Get-ADTrust -Filter 'msDS-TrustForestTrustInfo -ne "$null"'
+```
+
+## User Hunting
+Find all machines on the current domain where the current user has local admin access
+>this command use **Get-NetComputer** then **CheckLocalAdminAccess** on each machine
+```powershell
+Find-LocalAdminAccess -Verbose
+```
+Find local admins on all machines of the domain (needs administrator privs on non-dc machines).
+>this command use **Get-NetComputer** then **GetNetLocalGroup** on each machine
+```powershell
+Invoke-EnumerateLocalAdmin –Verbose
+```
+Find computers where a domain admin (or specified user/group) has sessions:
+>this command use **Get-NetComputer** then **GetNetSession/Get-NetLoggedon** on each machine
+```powershell
+Invoke-UserHunter
+Invoke-UserHunter -GroupName "RDPUsers"
+Invoke-UserHunter -Stealth
+```
+To confirm admin access
+```powershell
+Invoke-UserHunter -CheckAccess
 ```
