@@ -144,7 +144,7 @@ Get-NetGroup –UserName "student1"
 # ActiveDirectory Module
 Get-ADPrincipalGroupMembership -Identity student1
 ```
-
+## Local Group
 List all the local groups on a machine (needs administrator privs on nondc machines) -Powerview:
 ```powershell
 Get-NetLocalGroup -ComputerName dcorpdc.dollarcorp.moneycorp.local -ListGroups
@@ -153,4 +153,20 @@ Get-NetLocalGroup -ComputerName dcorpdc.dollarcorp.moneycorp.local -ListGroups
 Get members of all the local groups on a machine (needs administrator privs on non-dc machines) -Powerview 
 ```powershell
 Get-NetLocalGroup -ComputerName dcorpdc.dollarcorp.moneycorp.local -Recurse
+```
+
+## Actively Logged User
+Get actively logged users on a computer (needs local admin rights on the target)
+```powershell
+Get-NetLoggedon -ComputerName dcorp-std134.dollarcorp.moneycorp.local
+```
+
+Get locally logged users on a computer (needs remote registry on the target - started by-default on server OS)
+```powershell
+Get-LoggedonLocal -ComputerName dcorp-dc.dollarcorp.moneycorp.local
+```
+
+Get the last logged user on a computer (needs administrative rights and remote registry on the target)
+```powershell
+Get-LastLoggedOn –ComputerName dcorp-dc.dollarcorp.moneycorp.local
 ```
