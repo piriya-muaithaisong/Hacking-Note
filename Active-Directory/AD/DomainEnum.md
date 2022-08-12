@@ -99,6 +99,7 @@ Get-NetComputer
 Get-NetComputer –OperatingSystem "*Server 2016*"
 Get-NetComputer -Ping
 Get-NetComputer -FullData
+Get-NetComputer | Get-IPAddress
 
 # ActiveDirectory Module
 Get-ADComputer -Filter * | select Name
@@ -368,6 +369,11 @@ Find all machines on the current domain where the current user has local admin a
 ```powershell
 Find-LocalAdminAccess -Verbose
 ```
+Or you could use tools below
+
+- Find-WMILocalAdminAccess.ps1
+- FindPSRemotingLocalAdminAccess.ps1
+
 Find local admins on all machines of the domain (needs administrator privs on non-dc machines).
 >this command use **Get-NetComputer** then **GetNetLocalGroup** on each machine
 ```powershell
