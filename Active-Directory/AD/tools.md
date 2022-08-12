@@ -20,7 +20,6 @@ Select specipic data
 Get-NetUser| select name
 ```
 
-
 ## PowerView.ps1
 import
 ```powershell
@@ -35,10 +34,3 @@ Import-Module C:\AD\Tools\ADModule-master\Microsoft.ActiveDirectory.Management.d
 Import-Module C:\AD\Tools\ADModule-master\ActiveDirectory\ActiveDirectory.psd1
 ```
 
-
-## Bypass
-### app locker
-Get applocker 
-```powershell
-Get-AppLockerPolicy -Effective | select -ExpandProperty RuleCollections
-```

