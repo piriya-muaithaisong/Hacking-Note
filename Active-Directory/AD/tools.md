@@ -34,3 +34,12 @@ Import-Module C:\AD\Tools\ADModule-master\Microsoft.ActiveDirectory.Management.d
 Import-Module C:\AD\Tools\ADModule-master\ActiveDirectory\ActiveDirectory.psd1
 ```
 
+##  klist
+list key
+```powershell
+ klist
+```
+destroy key
+```powershell
+ klist purge
+```

