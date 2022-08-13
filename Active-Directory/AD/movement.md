@@ -23,6 +23,7 @@ Enter-PSSession -Credential $creds -ComputerName dcorp-adminsrv.dollarcorp.money
 If you dont need a password
 ```powershell
 Enter-PSSession -ComputerName dcorp-adminsrv.dollarcorp.moneycorp.local
+Enter-PSSession -ComputerName dcorp-dc.dollarcorp.moneycorp.local -Credential dcorp\administrator
 ```
 Dont need password with saved session
 ```powershell
