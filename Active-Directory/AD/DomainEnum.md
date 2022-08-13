@@ -63,7 +63,8 @@ Get-DomainSID #PowerView
 ```powershell
 # PowerView
 Get-NetUser
-Get-NetUser –Username student1
+Get-NetUser -Username student1
+Get-NetUser -SPN
 
 # ActiveDirectory Module
 Get-ADUser -Filter * -Properties *
@@ -73,7 +74,7 @@ list of all properties for users in the current domain
 ```powershell
 # PowerView
 Get-UserProperty
-Get-UserProperty –Properties pwdlastset
+Get-UserProperty -Properties pwdlastset
 
 # ActiveDirectory Module
 Get-ADUser -Filter * -Properties * | select -First 1 | Get-Member -MemberType *Property | select Name
