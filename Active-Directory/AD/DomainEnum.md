@@ -294,6 +294,11 @@ Get-ObjectAcl -SamAccountName student1 -ResolveGUIDs
 Get-ObjectAcl -ResolveGUIDs | ?{$_.IdentityReference -match 'dcorp\\RDPusers'}
 Get-ObjectAcl -ResolveGUIDs | ?{$_.IdentityReference -match 'dcorp\\RDPusers' -AND $_.ObjectDN -match 'contro'}
 ```
+check if studentx has replication rights
+```powershell
+Get-ObjectAcl -DistinguishedName "dc=dollarcorp,dc=moneycorp,dc=local" -ResolveGUIDs | ? {($_.IdentityReference -match "studentx") -and (($_.ObjectType -match 'replication') -or ($_.ActiveDirectoryRights -match 'GenericAll'))}
+```
+
 Get the ACLs associated with the specified prefix to be used for search
 ```powershell
 Get-ObjectAcl -ADSprefix 'CN=Administrator,CN=Users' -Verbose
