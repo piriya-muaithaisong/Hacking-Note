@@ -8,6 +8,8 @@
 Copy ITEM
 ```powershell
 Copy-Item .\MimikatzEx.ps1 \\dcorp-adminsrv.dollarcorp.moneycorp.local\c$\'Program Files'
+
+ Copy-Item -ToSession $appsrv1 -Path C:\AD\Tools\Rubeus.exe -Destination C:\Users\appadmin\Downloads
 ```
 
 format table

