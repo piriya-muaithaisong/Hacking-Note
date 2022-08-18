@@ -2,7 +2,8 @@
 > Movement Technique and Remote code execution
 
 # table of content
-1. [test](#test)
+1. [Powershell Remoting](#Powershell-Remoting)
+2. [Invoke Command](#Invoke-Command)
 
 
 ## Powershell Remoting
