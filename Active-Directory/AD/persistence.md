@@ -4,7 +4,10 @@
 1. [Over Pass The Hash](#Over-Pass-The-Hash)
 2. [Golden ticket](#Golden-ticket)
 3. [Silver Ticket](#Silver-Ticket)
-4. [Avaiable services](#Computer)
+4. [Avaiable services](#Avaiable-services)
+5. [Skeleton key](#Skeleton-key)
+6. [DSRM](#DSRM)
+7. [ACL](#ACL)
 
 ## Over Pass The Hash
 PTH with mimikatz --> perform activities as the hash but Windows still think I am the same person
