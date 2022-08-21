@@ -1,8 +1,10 @@
 # Privilege Escalation
 > Mainly focus on the Domain Privilege Escalation
-Table of Content
-1. [test](#test)
-
+## Table of Content
+1. [Local Privilege Escalation](#Local-Privilege-Escalation)
+2. [Domain-Privilege-Escalation](#Domain-Privilege-Escalation)
+3. [test](#test)
+4. [test](#test)
 
 ## Local Privilege Escalation
 > See [Window Privilege Escalation](#test)
