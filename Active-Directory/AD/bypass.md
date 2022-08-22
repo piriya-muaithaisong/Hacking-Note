@@ -1,5 +1,5 @@
 # Bypass Technique
-> test
+> bypass technique used on AD 
 
 ## ASMI
 ```powershell
