@@ -41,3 +41,20 @@ Get-AADIntTenantDomains -Domain deffin.onmicrosoft.com
 #Get all the information
 Invoke-AADIntReconAsOutsider -DomainName defcorphq.onmicrosoft.com
 ```
+
+## Method
+1. list all resource
+2. list role assignment
+3. Get permission to the resource -- can be done with API
+4. list VM
+5. list Webapp
+6. list Function app
+7. list Stroage account
+8. list keyvault
+9. list all enterprise application/service principal - using API or Az powershell
+10. list the account that log on in server - use 
+   1) az ad signed-in-user list-owned-objects
+   2) az ad signed-in-user show
+11. get role on socpe 
+   1) Get-AzRoleAssignment -Scope /subscriptions/b413826f-108d4049-8c11-d52d5d388768/resourceGroups/Engineering/providers/Microsoft.Automation/automationAccounts/HybridAutomation
+12. get administrative unit - using AzureAD module (see objective 16)
