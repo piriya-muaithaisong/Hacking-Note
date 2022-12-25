@@ -58,3 +58,14 @@ Invoke-AADIntReconAsOutsider -DomainName defcorphq.onmicrosoft.com
 11. get role on socpe 
    1) Get-AzRoleAssignment -Scope /subscriptions/b413826f-108d4049-8c11-d52d5d388768/resourceGroups/Engineering/providers/Microsoft.Automation/automationAccounts/HybridAutomation
 12. get administrative unit - using AzureAD module (see objective 16)
+
+```powershell
+Get-AzResource
+Get-AzRoleAssignment
+Get-AzRoleAssignment -SignInName test@defcorphq.onmicrosoft.com
+Get-AzVM | fl
+Get-AzWebApp
+Get-AzFunctionApp
+Get-AzStorageAccount | fl
+Get-AzKeyVault
+```
